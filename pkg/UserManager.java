@@ -145,21 +145,19 @@ public class UserManager {
 	// read and deserialize multiple users from file
 	User[] arr_obj = deserialize(infile);
 
-	// Add admin role to 3 users
-        User[] modified_users = new User[3];
-        for (int i=0; i<3; i++) {
-		modified_users[i] = arr_obj[i];
-		System.out.println(i+" before: "+modified_users[i].roles);
-		for(String role : roles) {
-		  modified_users[i].roles.add(role);
-		}
-		System.out.println(i+" after: "+modified_users[i].roles);
-	}
+	// Do something with roles
+	User[] modified_users=strategy.execute(arr_obj, roles);
 
 	// serialize multiple users to json file
 	serialize(modified_users, outfile);
   }
+  public void setStrategy(Strategy strategy) {
+	this.strategy=strategy;
+  }
 
   // use google's json converter
   private Gson gson;
+
+  // strategy for role manipulation
+  private Strategy strategy;
 }
