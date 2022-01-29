@@ -10,6 +10,6 @@ class Demo {
 	//um.test(args);
 	//um.change_something(args);
 	String[] roles={Role.ADMIN,Role.USER};
-	um.add_roles(roles);
+	um.add_roles(DATAFILE, NEWDATAFILE, roles);
   }
 }

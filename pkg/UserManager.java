@@ -10,27 +10,29 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-class UserManager {
+/**
+  UserManager serializes and deserialized users and manipulates them.
+*/
+public class UserManager {
 
-  public static final String DATAFILE="users.json";
-  public static final String NEWDATAFILE="newusers.json";
+  /**
+    Constructor.
+  */
+  public UserManager() {
+	gson = new Gson();
+  }
 
-  public void test(String[] args) {
-	// serialize single user
-	User obj = new User();
-	Gson gson = new Gson();
-	String json = gson.toJson(obj);  
-	System.out.println("Here's the stringified object: "+json);
+  /**
+    Reads and deserializes multiple users from a specified file. The file must be in json format.
 
-	// deserialize single user
-	User obj2 = gson.fromJson(json, User.class);
-	System.out.println("Here's the gson object: ");
-	System.out.println(obj2);
+    @param file: filename specified as a relative path
+    @return  an array of User objects
+  */
+  public User[] deserialize(String file) {
 
-	// read and deserialize multiple users from file
 	String content = "";
 	try {
-		content = new String ( Files.readAllBytes( Paths.get(DATAFILE) ) );
+		content = new String ( Files.readAllBytes( Paths.get(file) ) );
 	}
 	catch (IOException e)
 	{
@@ -38,39 +40,23 @@ class UserManager {
 	}
 	System.out.println(content);
 	User[] arr_obj = gson.fromJson(content, User[].class);
-	for(User user : arr_obj) {
-		System.out.println(user.first_name+" "+user.last_name);
-		System.out.println(user.address);
-	}
+	return arr_obj;
+
   }
-  public static void change_something(String[] args) {
 
-	Gson gson = new Gson();
-	// read and deserialize multiple users from file
-	String content = "";
+  /**
+    Serializes multiple users and writes to a specified json file.
 
-	try {
-		content = new String ( Files.readAllBytes( Paths.get(DATAFILE) ) );
-	}
-	catch (IOException e) {
-            e.printStackTrace();
-	}
-	User[] arr_obj = gson.fromJson(content, User[].class);
-	// change email of 3 users
-        User[] modified_users = new User[3];
-        for (int i=0; i<3; i++) {
-		modified_users[i] = arr_obj[i];
-		System.out.println(i+" before: "+modified_users[i].email);
-		modified_users[i].email=modified_users[i].first_name+modified_users[i].last_name+"@example.com";
-		System.out.println(i+" after: "+modified_users[i].email);
-	}
-	String json = gson.toJson(modified_users);
+    @param users: array of User objects to serialize
+    @param outfile: output filename specified as a relative path. It will be overwritten if it exists.
+  */
+  public void serialize(User[] users, String outfile) {
+
+	String json = gson.toJson(users);
 	System.out.println("Here are the stringified objects: "+json);
-
-	// serialize multiple users to json file
 	//a) create the file
 	try {
-		File f = new File(NEWDATAFILE);
+		File f = new File(outfile);
 		if (!f.createNewFile()) {
 			System.out.println("File already exists. It will be overwritten.");
 		}
@@ -80,7 +66,7 @@ class UserManager {
 	}
 	//b) write to file
 	try {
-		FileWriter myWriter = new FileWriter(NEWDATAFILE);
+		FileWriter myWriter = new FileWriter(outfile);
 		myWriter.write(json);
 		myWriter.close();
 		System.out.println("Success.");
@@ -89,19 +75,76 @@ class UserManager {
 		e.printStackTrace();
 	}
   }
-  public void add_roles(String[] roles) {
 
-	Gson gson = new Gson();
+  /**
+    Sanity check for serializing and deserializing users.
+    Check that a single user object can be serialized and deserialized
+    Check multiple users in a file are deserialized.
+    Some of properties of all the users are displayed for a visual check.
+
+    @param infile: input filename specified as a relative path.
+  */
+  public void test(String infile) {
+	// serialize single user
+	User obj = new User();
+	String json = gson.toJson(obj);
+	System.out.println("Here's the stringified object: "+json);
+
+	// deserialize single user
+	User obj2 = gson.fromJson(json, User.class);
+	System.out.println("Here's the gson object: ");
+	System.out.println(obj2);
+
 	// read and deserialize multiple users from file
-	String content = "";
+	User[] arr_obj = deserialize(infile);
 
-	try {
-		content = new String ( Files.readAllBytes( Paths.get(DATAFILE) ) );
+	for(User user : arr_obj) {
+		System.out.println(user.first_name+" "+user.last_name);
+		System.out.println(user.address);
 	}
-	catch (IOException e) {
-            e.printStackTrace();
+  }
+  /**
+    Test that an existing property of users can be modified.
+    The property modified is the email attribute. The input file contains emails, some empty, for each user.
+    Users are read from file and deserialized, and a few are selected for modification.
+    A new file containing the modified users is written.
+
+    @param infile: input filename specified as a relative path.
+    @param outfile: output filename specified as a relative path. It will be overwritten if it exists.
+  */
+  public void change_something(String infile, String outfile) {
+
+	// read and deserialize multiple users from file
+	User[] arr_obj = deserialize(infile);
+
+	// change email of 3 users
+        User[] modified_users = new User[3];
+        for (int i=0; i<3; i++) {
+		modified_users[i] = arr_obj[i];
+		System.out.println(i+" before: "+modified_users[i].email);
+		modified_users[i].email=modified_users[i].first_name+modified_users[i].last_name+"@example.com";
+		System.out.println(i+" after: "+modified_users[i].email);
 	}
-	User[] arr_obj = gson.fromJson(content, User[].class);
+
+	// serialize multiple users to json file
+	serialize(modified_users, outfile);
+  }
+  /**
+    Add the specified roles to the first 3 users in the UserManager.
+    The property modified is the roles attribute. The input file does not contain roles.
+    Users are read from file and deserialized, and a few are selected for modification.
+    A new file containing the modified users is written.
+
+    @param infile input filename specified as a relative path.
+    @param outfile output filename specified as a relative path. It will be overwritten if it exists.
+    @param roles the list of roles to add (must be strings in the Role interface)
+    @see Role
+  */
+  public void add_roles(String infile, String outfile, String[] roles) {
+
+	// read and deserialize multiple users from file
+	User[] arr_obj = deserialize(infile);
+
 	// Add admin role to 3 users
         User[] modified_users = new User[3];
         for (int i=0; i<3; i++) {
@@ -112,29 +155,11 @@ class UserManager {
 		}
 		System.out.println(i+" after: "+modified_users[i].roles);
 	}
-	String json = gson.toJson(modified_users);
-	System.out.println("Here are the stringified objects: "+json);
 
 	// serialize multiple users to json file
-	//a) create the file
-	try {
-		File f = new File(NEWDATAFILE);
-		if (!f.createNewFile()) {
-			System.out.println("File already exists. It will be overwritten.");
-		}
-	} catch (IOException e) {
-		System.out.println("Error!");
-		e.printStackTrace();
-	}
-	//b) write to file
-	try {
-		FileWriter myWriter = new FileWriter(NEWDATAFILE);
-		myWriter.write(json);
-		myWriter.close();
-		System.out.println("Success.");
-	} catch (IOException e) {
-		System.out.println("Error!");
-		e.printStackTrace();
-	}
+	serialize(modified_users, outfile);
   }
+
+  // use google's json converter
+  private Gson gson;
 }
