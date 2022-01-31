@@ -38,7 +38,7 @@ public class UserManager {
 	{
 		e.printStackTrace();
 	}
-	System.out.println(content);
+	System.out.println("Read file "+file+" into String: "+content);
 	User[] arr_obj = gson.fromJson(content, User[].class);
 	return arr_obj;
 

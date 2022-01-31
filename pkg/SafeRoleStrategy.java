@@ -19,6 +19,7 @@ public class SafeRoleStrategy implements Strategy {
 	*/
 	public User[] execute(User[] users, String[] roles){
 		if (!(Arrays.asList(roles).contains(Role.ADMIN))){
+			System.out.println("No admins found. Adding roles to first 3 users.");
 			// Add admin role to 3 users
 			User[] modified_users = new User[3];
 			for (int i=0; i<3; i++) {
@@ -33,7 +34,8 @@ public class SafeRoleStrategy implements Strategy {
 			// find 3 users with admin role
 			ArrayList<User> shift_users = new ArrayList<User>();
 			for (User user : users){
-				if (Arrays.asList(user.roles).contains("Role.ADMIN")) {
+				if (user.roles.contains(Role.ADMIN)) {
+					System.out.println("Found an admin: "+user.getFirstname()+" "+user.getLastname());
 					shift_users.add(user);
 				}
 				
